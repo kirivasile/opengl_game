@@ -1,0 +1,11 @@
+prefix=D:/OpenGLProjects/opengl_game/dependencies_install
+exec_prefix=D:/OpenGLProjects/opengl_game/dependencies_install/bin
+libdir=D:/OpenGLProjects/opengl_game/dependencies_install/lib
+includedir=D:/OpenGLProjects/opengl_game/dependencies_install/include/assimp
+
+Name: Assimp
+Description: Import various well-known 3D model formats in an uniform manner.
+Version: 3.3.1
+Libs: -L${libdir} -lassimp
+Libs.private:  
+Cflags: -I${includedir}
