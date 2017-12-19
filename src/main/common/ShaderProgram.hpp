@@ -59,6 +59,8 @@ typedef std::shared_ptr<Shader> ShaderPtr;
 class ShaderProgram
 {
 public:
+	static const std::string SHADER_DIR;
+
     ShaderProgram() :
         _programId(glCreateProgram())
     {
@@ -67,7 +69,7 @@ public:
     ShaderProgram(const std::string& vertFilepath, const std::string& fragFilepath) :
         _programId(glCreateProgram())
     {
-        createProgram(vertFilepath, fragFilepath);
+        createProgram(SHADER_DIR + vertFilepath, SHADER_DIR + fragFilepath);
     }
 
     ~ShaderProgram()

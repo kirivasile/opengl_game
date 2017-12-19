@@ -10,6 +10,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <vector>
 
 class DataBuffer
 {
@@ -158,6 +159,7 @@ public:
 		glBindVertexArray(_vao);
 		glDrawArraysInstanced(_primitiveType, 0, _vertexCount, instanceCount);
 	}
+
 protected:
 	Mesh(const Mesh&) = delete;
 	void operator=(const Mesh&) = delete;
@@ -178,6 +180,25 @@ protected:
 	glm::mat4 _modelMatrix;
 };
 
-typedef std::shared_ptr<Mesh> MeshPtr;
+class Water : public Mesh {
+public:
+	Water(float height, float size) :
+		_height(height), _size(size) {}
 
-MeshPtr makeRelief(float size=1., unsigned int frequency=100, int num_octvaes=1, float persistence=0.5f);
+	float getHeight() {
+		return _height;
+	}
+protected:
+	float _height;
+	float _size;
+};
+
+typedef std::shared_ptr<Mesh> MeshPtr;
+typedef std::shared_ptr<Water> WaterPtr;
+
+
+MeshPtr makeCube(float size=1.);
+
+MeshPtr makeSphere(float radius, unsigned int N=100);
+
+

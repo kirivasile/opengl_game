@@ -1,5 +1,4 @@
 #include "Mesh.hpp"
-#include "PerlinNoise.h"
 
 #include <iostream>
 #include <vector>
@@ -10,94 +9,169 @@
 
 typedef std::vector<std::vector<std::vector<std::pair<int, glm::vec3>>>> norm_data;
 
-MeshPtr makeRelief(float size, unsigned int frequency, int num_octvaes, float persistence) {
+MeshPtr makeCube(float size)
+{
 	std::vector<glm::vec3> vertices;
-	// Array to count interpolated normals
-	// By indexes it returns array of non-interpolated normals of this point
-	// and iterator to store where to store this data
-	norm_data norm_ij(frequency + 2,
-		std::vector<std::vector<std::pair<int, glm::vec3>>>(frequency + 2, std::vector<std::pair<int, glm::vec3>>()));
-	// Interpolated normals
 	std::vector<glm::vec3> normals;
+	std::vector<glm::vec2> texcoords;
 
-	std::vector<glm::vec2> tex_coords;
-	std::vector<glm::vec2> map_coords;
+	//front 1
+	vertices.push_back(glm::vec3(size, -size, size));
+	vertices.push_back(glm::vec3(size, size, -size));
+	vertices.push_back(glm::vec3(size, size, size));
 
-	// Array to average normals
-	std::vector<std::vector<glm::vec3>> normals_buf;
+	normals.push_back(glm::vec3(1.0, 0.0, 0.0));
+	normals.push_back(glm::vec3(1.0, 0.0, 0.0));
+	normals.push_back(glm::vec3(1.0, 0.0, 0.0));
 
-	PerlinNoise pn = PerlinNoise(num_octvaes, persistence);
+	texcoords.push_back(glm::vec2(0.0, 1.0));
+	texcoords.push_back(glm::vec2(1.0, 0.0));
+	texcoords.push_back(glm::vec2(1.0, 1.0));
 
-	// Draw square from -size to size with frequency=frequency
-	float step = 2.f / frequency;
-	float shakalnost = 5.f; // Shakalnost
-	int it = 0;
-	int ii = 0;
-	int jj = 0;
-	for (float i = -1., ii = 0; i < 1.; i += step, ++ii) {
-		for (float j = -1., jj = 0; j < 1.; j += step, ++jj) {
-			// Frist triangle
-			glm::vec3 first = glm::vec3(i * size, j * size, pn.perlin_noise_2D(i, j));
-			glm::vec3 second = glm::vec3((i + step) * size, j * size, pn.perlin_noise_2D(i + step, j));
-			glm::vec3 third = glm::vec3(i * size, (j + step) * size, pn.perlin_noise_2D(i, j + step));
-			vertices.push_back(first);
-			vertices.push_back(second);
-			vertices.push_back(third);
+	//front 2
+	vertices.push_back(glm::vec3(size, -size, size));
+	vertices.push_back(glm::vec3(size, -size, -size));
+	vertices.push_back(glm::vec3(size, size, -size));
 
-			// Calculate normal
-			glm::vec3 norm = glm::normalize(glm::cross(third - first, second - first));
-			norm_ij[ii][jj].push_back(std::make_pair(it++, -norm));
-			norm_ij[ii + 1][jj].push_back(std::make_pair(it++, -norm));
-			norm_ij[ii][jj + 1].push_back(std::make_pair(it++, -norm));
+	normals.push_back(glm::vec3(1.0, 0.0, 0.0));
+	normals.push_back(glm::vec3(1.0, 0.0, 0.0));
+	normals.push_back(glm::vec3(1.0, 0.0, 0.0));
 
-			float tx = (i + 1.f) * shakalnost;
-			float ty = (j + 1.f) * shakalnost;
-			tex_coords.push_back(glm::vec2(tx, ty));
-			tex_coords.push_back(glm::vec2(tx + step * shakalnost, ty));
-			tex_coords.push_back(glm::vec2(tx, ty + step * shakalnost));
-			// Coordinates for map texture
-			float x = (i + 1.f) / 2.f;
-			float y = (j + 1.f) / 2.f;
-			map_coords.push_back(glm::vec2(x, y));
-			map_coords.push_back(glm::vec2(x + step / 2.f, y));
-			map_coords.push_back(glm::vec2(x, y + step / 2.f));
+	texcoords.push_back(glm::vec2(0.0, 1.0));
+	texcoords.push_back(glm::vec2(0.0, 0.0));
+	texcoords.push_back(glm::vec2(1.0, 0.0));
 
-			// Second triangle
-			first = glm::vec3(i * size, (j + step) * size, pn.perlin_noise_2D(i, j + step));
-			second = glm::vec3((i + step) * size, (j + step) * size, pn.perlin_noise_2D(i + step, j + step));
-			third = glm::vec3((i + step) * size, j * size, pn.perlin_noise_2D(i + step, j));
-			vertices.push_back(first);
-			vertices.push_back(second);
-			vertices.push_back(third);
+	//left 1
+	vertices.push_back(glm::vec3(-size, -size, size));
+	vertices.push_back(glm::vec3(size, -size, -size));
+	vertices.push_back(glm::vec3(size, -size, size));
 
-			norm = glm::normalize(glm::cross(third - first, second - first));
-			norm_ij[ii][jj + 1].push_back(std::make_pair(it++, norm));
-			norm_ij[ii + 1][jj + 1].push_back(std::make_pair(it++, norm));
-			norm_ij[ii + 1][jj].push_back(std::make_pair(it++, norm));
+	normals.push_back(glm::vec3(0.0, -1.0, 0.0));
+	normals.push_back(glm::vec3(0.0, -1.0, 0.0));
+	normals.push_back(glm::vec3(0.0, -1.0, 0.0));
 
-			tex_coords.push_back(glm::vec2(tx, ty + step * shakalnost));
-			tex_coords.push_back(glm::vec2(tx + step * shakalnost, ty + step * shakalnost));
-			tex_coords.push_back(glm::vec2(tx + step * shakalnost, ty));
-			map_coords.push_back(glm::vec2(x, y + step / 2.f));
-			map_coords.push_back(glm::vec2(x + step / 2.f, y + step / 2.f));
-			map_coords.push_back(glm::vec2(x + step / 2.f, y));
-		}
-	}
+	texcoords.push_back(glm::vec2(0.0, 1.0));
+	texcoords.push_back(glm::vec2(1.0, 0.0));
+	texcoords.push_back(glm::vec2(1.0, 1.0));
 
-	// Find interpolated normals
-	normals = std::vector<glm::vec3>(it);
-	for (int ii = 0; ii < frequency + 1; ++ii) {
-		for (int jj = 0; jj < frequency + 1; ++jj) {
-			glm::vec3 norm;
-			for (auto& elem : norm_ij[ii][jj]) {
-				norm += elem.second;
-			}
-			norm /= norm_ij[ii][jj].size();
-			for (auto& elem : norm_ij[ii][jj]) {
-				normals[elem.first] = norm;
-			}
-		}
-	}
+	//left 2
+	vertices.push_back(glm::vec3(-size, -size, size));
+	vertices.push_back(glm::vec3(-size, -size, -size));
+	vertices.push_back(glm::vec3(size, -size, -size));
+
+	normals.push_back(glm::vec3(0.0, -1.0, 0.0));
+	normals.push_back(glm::vec3(0.0, -1.0, 0.0));
+	normals.push_back(glm::vec3(0.0, -1.0, 0.0));
+
+	texcoords.push_back(glm::vec2(0.0, 1.0));
+	texcoords.push_back(glm::vec2(0.0, 0.0));
+	texcoords.push_back(glm::vec2(1.0, 0.0));
+
+	//top 1
+	vertices.push_back(glm::vec3(-size, size, size));
+	vertices.push_back(glm::vec3(size, -size, size));
+	vertices.push_back(glm::vec3(size, size, size));
+
+	normals.push_back(glm::vec3(0.0, 0.0, 1.0));
+	normals.push_back(glm::vec3(0.0, 0.0, 1.0));
+	normals.push_back(glm::vec3(0.0, 0.0, 1.0));
+
+	texcoords.push_back(glm::vec2(0.0, 1.0));
+	texcoords.push_back(glm::vec2(1.0, 0.0));
+	texcoords.push_back(glm::vec2(1.0, 1.0));
+
+	//top 2
+	vertices.push_back(glm::vec3(-size, size, size));
+	vertices.push_back(glm::vec3(-size, -size, size));
+	vertices.push_back(glm::vec3(size, -size, size));
+
+	normals.push_back(glm::vec3(0.0, 0.0, 1.0));
+	normals.push_back(glm::vec3(0.0, 0.0, 1.0));
+	normals.push_back(glm::vec3(0.0, 0.0, 1.0));
+
+	texcoords.push_back(glm::vec2(0.0, 1.0));
+	texcoords.push_back(glm::vec2(0.0, 0.0));
+	texcoords.push_back(glm::vec2(1.0, 0.0));
+
+	//back 1
+	vertices.push_back(glm::vec3(-size, -size, size));
+	vertices.push_back(glm::vec3(-size, size, size));
+	vertices.push_back(glm::vec3(-size, size, -size));
+
+	normals.push_back(glm::vec3(-1.0, 0.0, 0.0));
+	normals.push_back(glm::vec3(-1.0, 0.0, 0.0));
+	normals.push_back(glm::vec3(-1.0, 0.0, 0.0));
+
+	texcoords.push_back(glm::vec2(0.0, 1.0));
+	texcoords.push_back(glm::vec2(1.0, 1.0));
+	texcoords.push_back(glm::vec2(1.0, 0.0));
+
+	//back 2
+	vertices.push_back(glm::vec3(-size, -size, size));
+	vertices.push_back(glm::vec3(-size, size, -size));
+	vertices.push_back(glm::vec3(-size, -size, -size));
+
+	normals.push_back(glm::vec3(-1.0, 0.0, 0.0));
+	normals.push_back(glm::vec3(-1.0, 0.0, 0.0));
+	normals.push_back(glm::vec3(-1.0, 0.0, 0.0));
+
+	texcoords.push_back(glm::vec2(0.0, 1.0));
+	texcoords.push_back(glm::vec2(1.0, 0.0));
+	texcoords.push_back(glm::vec2(0.0, 0.0));
+
+	//right 1
+	vertices.push_back(glm::vec3(-size, size, size));
+	vertices.push_back(glm::vec3(size, size, size));
+	vertices.push_back(glm::vec3(size, size, -size));
+
+	normals.push_back(glm::vec3(0.0, 1.0, 0.0));
+	normals.push_back(glm::vec3(0.0, 1.0, 0.0));
+	normals.push_back(glm::vec3(0.0, 1.0, 0.0));
+
+	texcoords.push_back(glm::vec2(0.0, 1.0));
+	texcoords.push_back(glm::vec2(1.0, 1.0));
+	texcoords.push_back(glm::vec2(1.0, 0.0));
+
+	//right 2
+	vertices.push_back(glm::vec3(-size, size, size));
+	vertices.push_back(glm::vec3(+size, size, -size));
+	vertices.push_back(glm::vec3(-size, size, -size));
+
+	normals.push_back(glm::vec3(0.0, 1.0, 0.0));
+	normals.push_back(glm::vec3(0.0, 1.0, 0.0));
+	normals.push_back(glm::vec3(0.0, 1.0, 0.0));
+
+	texcoords.push_back(glm::vec2(0.0, 1.0));
+	texcoords.push_back(glm::vec2(1.0, 0.0));
+	texcoords.push_back(glm::vec2(0.0, 0.0));
+
+	//bottom 1
+	vertices.push_back(glm::vec3(-size, size, -size));
+	vertices.push_back(glm::vec3(size, size, -size));
+	vertices.push_back(glm::vec3(size, -size, -size));
+
+	normals.push_back(glm::vec3(0.0, 0.0, -1.0));
+	normals.push_back(glm::vec3(0.0, 0.0, -1.0));
+	normals.push_back(glm::vec3(0.0, 0.0, -1.0));
+
+	texcoords.push_back(glm::vec2(0.0, 1.0));
+	texcoords.push_back(glm::vec2(1.0, 1.0));
+	texcoords.push_back(glm::vec2(1.0, 0.0));
+
+	//bottom 2
+	vertices.push_back(glm::vec3(-size, size, -size));
+	vertices.push_back(glm::vec3(size, -size, -size));
+	vertices.push_back(glm::vec3(-size, -size, -size));
+
+	normals.push_back(glm::vec3(0.0, 0.0, -1.0));
+	normals.push_back(glm::vec3(0.0, 0.0, -1.0));
+	normals.push_back(glm::vec3(0.0, 0.0, -1.0));
+
+	texcoords.push_back(glm::vec2(0.0, 1.0));
+	texcoords.push_back(glm::vec2(1.0, 0.0));
+	texcoords.push_back(glm::vec2(0.0, 0.0));
+
+	//----------------------------------------
 
 	DataBufferPtr buf0 = std::make_shared<DataBuffer>(GL_ARRAY_BUFFER);
 	buf0->setData(vertices.size() * sizeof(float) * 3, vertices.data());
@@ -106,16 +180,80 @@ MeshPtr makeRelief(float size, unsigned int frequency, int num_octvaes, float pe
 	buf1->setData(normals.size() * sizeof(float) * 3, normals.data());
 
 	DataBufferPtr buf2 = std::make_shared<DataBuffer>(GL_ARRAY_BUFFER);
-	buf2->setData(tex_coords.size() * sizeof(float) * 2, tex_coords.data());
-
-	DataBufferPtr buf3 = std::make_shared<DataBuffer>(GL_ARRAY_BUFFER);
-	buf3->setData(map_coords.size() * sizeof(float) * 2, map_coords.data());
+	buf2->setData(texcoords.size() * sizeof(float) * 2, texcoords.data());
 
 	MeshPtr mesh = std::make_shared<Mesh>();
 	mesh->setAttribute(0, 3, GL_FLOAT, GL_FALSE, 0, 0, buf0);
 	mesh->setAttribute(1, 3, GL_FLOAT, GL_FALSE, 0, 0, buf1);
 	mesh->setAttribute(2, 2, GL_FLOAT, GL_FALSE, 0, 0, buf2);
-	mesh->setAttribute(3, 2, GL_FLOAT, GL_FALSE, 0, 0, buf3);
+	mesh->setPrimitiveType(GL_TRIANGLES);
+	mesh->setVertexCount(vertices.size());
+
+	std::cout << "Cube is created with " << vertices.size() << " vertices\n";
+
+	return mesh;
+}
+
+MeshPtr makeSphere(float radius, unsigned int N) {
+	unsigned int M = N / 2;
+
+	std::vector<glm::vec3> vertices;
+	std::vector<glm::vec3> normals;
+	std::vector<glm::vec2> texcoords;
+
+	for (unsigned int i = 0; i < M; i++)
+	{
+		float theta = (float)glm::pi<float>() * i / M;
+		float theta1 = (float)glm::pi<float>() * (i + 1) / M;
+
+		for (unsigned int j = 0; j < N; j++)
+		{
+			float phi = 2.0f * (float)glm::pi<float>() * j / N + (float)glm::pi<float>();
+			float phi1 = 2.0f * (float)glm::pi<float>() * (j + 1) / N + (float)glm::pi<float>();
+
+			//Первый треугольник, образующий квад
+			vertices.push_back(glm::vec3(cos(phi) * sin(theta) * radius, sin(phi) * sin(theta) * radius, cos(theta) * radius));
+			vertices.push_back(glm::vec3(cos(phi1) * sin(theta1) * radius, sin(phi1) * sin(theta1) * radius, cos(theta1) * radius));
+			vertices.push_back(glm::vec3(cos(phi1) * sin(theta) * radius, sin(phi1) * sin(theta) * radius, cos(theta) * radius));
+
+			normals.push_back(glm::vec3(cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta)));
+			normals.push_back(glm::vec3(cos(phi1) * sin(theta1), sin(phi1) * sin(theta1), cos(theta1)));
+			normals.push_back(glm::vec3(cos(phi1) * sin(theta), sin(phi1) * sin(theta), cos(theta)));
+
+			texcoords.push_back(glm::vec2((float)j / N, 1.0f - (float)i / M));
+			texcoords.push_back(glm::vec2((float)(j + 1) / N, 1.0f - (float)(i + 1) / M));
+			texcoords.push_back(glm::vec2((float)(j + 1) / N, 1.0f - (float)i / M));
+
+			//Второй треугольник, образующий квад
+			vertices.push_back(glm::vec3(cos(phi) * sin(theta) * radius, sin(phi) * sin(theta) * radius, cos(theta) * radius));
+			vertices.push_back(glm::vec3(cos(phi) * sin(theta1) * radius, sin(phi) * sin(theta1) * radius, cos(theta1) * radius));
+			vertices.push_back(glm::vec3(cos(phi1) * sin(theta1) * radius, sin(phi1) * sin(theta1) * radius, cos(theta1) * radius));
+
+			normals.push_back(glm::vec3(cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta)));
+			normals.push_back(glm::vec3(cos(phi) * sin(theta1), sin(phi) * sin(theta1), cos(theta1)));
+			normals.push_back(glm::vec3(cos(phi1) * sin(theta1), sin(phi1) * sin(theta1), cos(theta1)));
+
+			texcoords.push_back(glm::vec2((float)j / N, 1.0f - (float)i / M));
+			texcoords.push_back(glm::vec2((float)j / N, 1.0f - (float)(i + 1) / M));
+			texcoords.push_back(glm::vec2((float)(j + 1) / N, 1.0f - (float)(i + 1) / M));
+		}
+	}
+
+	//----------------------------------------
+
+	DataBufferPtr buf0 = std::make_shared<DataBuffer>(GL_ARRAY_BUFFER);
+	buf0->setData(vertices.size() * sizeof(float) * 3, vertices.data());
+
+	DataBufferPtr buf1 = std::make_shared<DataBuffer>(GL_ARRAY_BUFFER);
+	buf1->setData(normals.size() * sizeof(float) * 3, normals.data());
+
+	DataBufferPtr buf2 = std::make_shared<DataBuffer>(GL_ARRAY_BUFFER);
+	buf2->setData(texcoords.size() * sizeof(float) * 2, texcoords.data());
+
+	MeshPtr mesh = std::make_shared<Mesh>();
+	mesh->setAttribute(0, 3, GL_FLOAT, GL_FALSE, 0, 0, buf0);
+	mesh->setAttribute(1, 3, GL_FLOAT, GL_FALSE, 0, 0, buf1);
+	mesh->setAttribute(2, 2, GL_FLOAT, GL_FALSE, 0, 0, buf2);
 	mesh->setPrimitiveType(GL_TRIANGLES);
 	mesh->setVertexCount(vertices.size());
 

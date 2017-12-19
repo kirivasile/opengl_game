@@ -4,6 +4,8 @@
 #include <vector>
 #include <fstream>
 
+const std::string ShaderProgram::SHADER_DIR = "mainData/shaders/";
+
 void Shader::createFromFile(const std::string& filepath)
 {
     //Читаем текст шейдера из файла
