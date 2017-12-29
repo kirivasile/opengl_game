@@ -1,7 +1,0 @@
-prefix=D:/OpenGLProjects/opengl_game/dependencies_install
-includedir=${prefix}/include
-
-Name: GLM
-Description: OpenGL Mathematics
-Version: 0.9.8
-Cflags: -I${includedir}
