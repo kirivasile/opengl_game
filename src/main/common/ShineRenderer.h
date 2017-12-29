@@ -13,6 +13,8 @@ public:
 	ShineRenderer(int width, int height);
 
 	void render(const std::vector<SceneObjectPtr>& objects, const std::vector<GLuint>& samplers, const CameraInfo& camera);
+
+	void resize(int width, int height);
 protected:
 	FramebufferPtr _original, _hor_blurred, _ver_blurred;
 	ShaderProgramPtr _blurredShader, _mainShader;

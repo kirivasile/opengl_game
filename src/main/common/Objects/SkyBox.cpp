@@ -30,7 +30,7 @@ void SkyBox::render(const CameraInfo& camera, const GLuint& sampler) {
 
 	glDepthMask(GL_TRUE); //Enabling the write to the depth buffer
 
-						  //Disconnect sampler and shader program
+	//Disconnect sampler and shader program
 	glBindSampler(0, 0);
 	glUseProgram(0);
 }

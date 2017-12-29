@@ -60,6 +60,14 @@ void ShineRenderer::render(const std::vector<SceneObjectPtr>& objects, const std
 	glActiveTexture(GL_TEXTURE0 + 1);
 	_ver_blurred->bindColorBuffer();
 	_mainShader->setIntUniform("blurTex", 1);
-	
+
 	_quad->draw();
+}
+
+void ShineRenderer::resize(int width, int height) {
+	_width = width;
+	_height = height;
+	_original->resize(width, height);
+	_hor_blurred->resize(width, height);
+	_ver_blurred->resize(width, height);
 }

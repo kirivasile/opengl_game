@@ -42,7 +42,8 @@ void Shader::createFromString(const std::string& text)
 
         glGetShaderInfoLog(_id, errorLength, 0, errorMessage.data());
 
-        std::cerr << "Failed to compile the shader:\n" << errorMessage.data() << std::endl;
+		std::cerr << "Failed to compile shader: " << text << std::endl;
+        std::cerr << errorMessage.data() << std::endl;
 
         exit(1);
     }
