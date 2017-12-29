@@ -1,10 +1,9 @@
 #include "Application.hpp"
-#include "Mesh.hpp"
-#include "ShaderProgram.hpp"
-#include "Texture.hpp"
-
-#include <iostream>
-#include <vector>
+#include "Objects\Star.h"
+#include "Objects\Planet.h"
+#include "Objects\SkyBox.h"
+#include "Objects\ScreenQuad.hpp"
+#include "ShineRenderer.h"
 
 class TestApplication : public Application {
 public:
@@ -12,23 +11,30 @@ public:
 
 		Application::makeScene();
 
+		int width, height;
+		glfwGetFramebufferSize(_window, &width, &height);
+		_shineRenderer = std::make_shared<ShineRenderer>(width, height);
+
 		_cameraMover = std::make_shared<FreeCameraMover>();
+		
+		glm::vec3 sunPosition = glm::vec3(0.0f, -5.0f, 0.f);
+		LightInfo sunLight;
+		sunLight.ambient = glm::vec3(0.1f, 0.1f, 0.1f);
+		sunLight.diffuse = glm::vec3(0.9f, 0.9f, 0.9f);
+		sunLight.specular = glm::vec3(0.2f, 0.2f, 0.2f);
+		_sun = std::make_shared<Star>(1.f, sunPosition, "sun.jpg", sunLight);
 
-		_skyBox = makeCube(10.f);
-		_sun = makeSphere(1.f);
-		_sun->setModelMatrix(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -5.0f, 0.f)));
-		_earth = makeSphere(0.5f);
-		_earth->setModelMatrix(glm::translate(glm::mat4(1.0f), glm::vec3(5.0f, -5.0f, 0.f)));
+		glm::vec3 earthPosition = glm::vec3(5.0f, -5.0f, 0.f);
+		MaterialInfo earthMaterial;
+		earthMaterial.ambient = glm::vec3(1.f, 1.f, 1.f);
+		earthMaterial.diffuse = glm::vec3(1.f, 1.f, 1.f);
+		earthMaterial.specular = glm::vec3(1.f, 1.f, 1.f);
+		_earth = std::make_shared<Planet>(0.4f, earthPosition, "earth.jpg", earthMaterial, _sun);
 
-		_starShader = std::make_shared<ShaderProgram>("star.vert", "star.frag");
-		_planetShader = std::make_shared<ShaderProgram>("planet.vert", "planet.frag");
-		_skyBoxShader = std::make_shared<ShaderProgram>("skybox.vert", "skybox.frag");
-
-		_sunTex = loadTexture("sun.jpg");
-		_skyBoxTex = loadCubeTexture("skybox");
-		_earthTex = loadTexture("earth.jpg");
+		_skyBox = std::make_shared<SkyBox>(10.f, "skybox");
 
 		// Initialize samplers for keeping the parameters of the reading from textures
+
 		glGenSamplers(1, &_sampler);
 		glSamplerParameteri(_sampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glSamplerParameteri(_sampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -41,6 +47,9 @@ public:
 		glSamplerParameteri(_skyBoxSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glSamplerParameteri(_skyBoxSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glSamplerParameteri(_skyBoxSampler, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+		_sceneObjects = { _earth, _sun, _skyBox};
+		_samplers = { _sampler, _sampler, _skyBoxSampler };
 	}
 
 	void draw() override {
@@ -51,91 +60,33 @@ public:
 		glViewport(0, 0, width, height);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		renderStar(_sun, _sunTex);
-		renderPlanet(_earth, _earthTex);
-		renderSkyBox();
+		// Render skybox without any shine effect 
 
+		_shineRenderer->render(_sceneObjects, _samplers, _camera);
+
+		/*
+		_original->bind();
+		_earth->render(_camera, _sampler);
+		_skyBox->render(_camera, _skyBoxSampler);
+		_sun->render(_camera, _sampler);
+		_original->unbind(); */
 
 	}
 
 protected:
-	void renderStar(MeshPtr star, TexturePtr texture) {
-		_starShader->use();
-		_starShader->setMat4Uniform("viewMatrix", _camera.viewMatrix);
-		_starShader->setMat4Uniform("projectionMatrix", _camera.projMatrix);
-		_starShader->setMat4Uniform("modelMatrix", star->modelMatrix());
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindSampler(0, _sampler);
-		texture->bind();
-		_starShader->setIntUniform("starTex", 0);
+	StarPtr _sun;
+	PlanetPtr _earth;
+	SkyBoxPtr _skyBox;
 
-		star->draw();
+	GLuint _sampler, _skyBoxSampler;
 
-		glBindSampler(0, 0);
-		glUseProgram(0);
-	}
+	ShineRendererPtr _shineRenderer;
 
-	void renderSkyBox() {
-		_skyBoxShader->use();
-		// Get the position of the virtual camera in the world coordinate system from the view matrix
-		glm::vec3 cameraPos = glm::vec3(glm::inverse(_camera.viewMatrix)[3]);
+	std::vector<SceneObjectPtr> _sceneObjects;
+	std::vector<GLuint> _samplers;
 
-		_skyBoxShader->setVec3Uniform("cameraPos", cameraPos);
-		_skyBoxShader->setMat4Uniform("viewMatrix", _camera.viewMatrix);
-		_skyBoxShader->setMat4Uniform("projectionMatrix", _camera.projMatrix);
-
-		// To change the coordinates into texture coordinates we need matrix to rotate YZ on 90 degrees and reflect on Y
-		glm::mat3 textureMatrix = glm::mat3(glm::scale(glm::rotate(glm::mat4(), -glm::pi<float>() * 0.5f, glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec3(1.0f, -1.0f, 1.0f)));
-		_skyBoxShader->setMat3Uniform("textureMatrix", textureMatrix);
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindSampler(0, _skyBoxSampler);
-		_skyBoxTex->bind();
-		_skyBoxShader->setIntUniform("skyBoxTex", 0);
-
-		glDepthMask(GL_FALSE); //Disabling the write to the depth buffer
-
-		_skyBox->draw();
-
-		glDepthMask(GL_TRUE); //Enabling the write to the depth buffer
-
-							  //Disconnect sampler and shader program
-		glBindSampler(0, 0);
-		glUseProgram(0);
-	}
-
-	void renderPlanet(MeshPtr planet, TexturePtr texture) {
-		_planetShader->use();
-		_planetShader->setMat4Uniform("viewMatrix", _camera.viewMatrix);
-		_planetShader->setMat4Uniform("projectionMatrix", _camera.projMatrix);
-		_planetShader->setMat4Uniform("modelMatrix", planet->modelMatrix());
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindSampler(0, _sampler);
-		texture->bind();
-		_planetShader->setIntUniform("planetTex", 0);
-
-		planet->draw();
-
-		glBindSampler(0, 0);
-		glUseProgram(0);
-	}
-
-	MeshPtr _sun;
-	MeshPtr _earth;
-	MeshPtr _skyBox;
-
-	ShaderProgramPtr _starShader;
-	ShaderProgramPtr _planetShader;
-	ShaderProgramPtr _skyBoxShader;
-
-	TexturePtr _sunTex;
-	TexturePtr _earthTex;
-	TexturePtr _skyBoxTex;
-
-	GLuint _sampler;
-	GLuint _skyBoxSampler;
+	int _oldWidth, _oldHeight;
 };
 
 int main() {
