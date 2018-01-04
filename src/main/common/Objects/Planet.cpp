@@ -1,13 +1,14 @@
 #pragma once
 #include "Planet.h"
 
-Planet::Planet(float radius, const glm::vec3& position, const std::string& texture, MaterialInfo material, StarPtr star)
-	: _material(material), _star(star) {
+Planet::Planet(float radius, const glm::vec3& position, const std::string& texture, MaterialInfo material, StarPtr star) : 
+	_material{ material },
+	_star{ star }
+{
 	_mesh = makeSphere(radius);
 	_mesh->setModelMatrix(glm::translate(glm::mat4(1.0f), position));
 	_position = position;
 	_texture = loadTexture(texture);
-
 	_shader = std::make_shared<ShaderProgram>("planet.vert", "planet.frag");
 }
 
@@ -42,4 +43,15 @@ void Planet::render(const CameraInfo& camera, const GLuint& sampler) {
 
 	glBindSampler(0, 0);
 	glUseProgram(0);
+}
+
+void Planet::rotate(float degrees, glm::vec3 direction) {
+	_mesh->setModelMatrix(glm::rotate(_mesh->modelMatrix(), degrees, direction));
+}
+
+void Planet::rotateAroundObject(SceneObjectPtr object, float degrees, glm::vec3 direction) {
+	glm::vec3 thisToObject = object->getPosition() - this->getPosition();
+	glm::vec3 newThisToObject = glm::rotate(thisToObject, degrees, direction);
+	glm::vec3 diff = thisToObject - newThisToObject;
+	_mesh->setModelMatrix(glm::translate(_mesh->modelMatrix(), diff));
 }

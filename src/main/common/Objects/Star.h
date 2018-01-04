@@ -15,6 +15,8 @@ public:
 
 	void render(const CameraInfo& camera, const GLuint& sampler) override;
 
+	void rotate(float degrees, glm::vec3 direction) override;
+
 	LightInfo getLight();
 protected:
 	LightInfo _light;

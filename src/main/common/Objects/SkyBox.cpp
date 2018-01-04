@@ -34,3 +34,5 @@ void SkyBox::render(const CameraInfo& camera, const GLuint& sampler) {
 	glBindSampler(0, 0);
 	glUseProgram(0);
 }
+
+void SkyBox::rotate(float degrees, glm::vec3 direction) {}

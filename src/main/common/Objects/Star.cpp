@@ -1,8 +1,9 @@
 #pragma once
 #include "Star.h"
 
-Star::Star(float radius, const glm::vec3& position, const std::string& texture, LightInfo light)
-	: _light(light) {
+Star::Star(float radius, const glm::vec3& position, const std::string& texture, LightInfo light) : 
+	_light{ light }
+{
 	_mesh = makeSphere(radius);
 	_mesh->setModelMatrix(glm::translate(glm::mat4(1.0f), position));
 	_position = position;
@@ -29,4 +30,8 @@ void Star::render(const CameraInfo& camera, const GLuint& sampler) {
 
 	glBindSampler(0, 0);
 	glUseProgram(0);
+}
+
+void Star::rotate(float degrees, glm::vec3 direction) {
+	_mesh->setModelMatrix(glm::rotate(_mesh->modelMatrix(), degrees, direction));
 }
