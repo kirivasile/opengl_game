@@ -1,3 +1,3 @@
-#include "ScreenQuad.h"
+#include "ScreenQuad.hpp"
 
 ScreenQuad::ScreenQuad() {}

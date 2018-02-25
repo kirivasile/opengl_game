@@ -65,7 +65,12 @@ public:
 		glViewport(0, 0, width, height);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		_shineRenderer->render(_sceneObjects, _samplers, _camera);
+		//_shineRenderer->render(_sceneObjects, _samplers, _camera);
+
+		for (unsigned int i = 0; i < _sceneObjects.size(); ++i) {
+			_sceneObjects[i]->render(_camera, _samplers[i]);
+		}
+
 		_earth->rotate(5e-4f, glm::vec3(0.f, 0.f, 1.f));
 		_sun->rotate(1e-4f, glm::vec3(0.f, 0.f, 1.f));
 		//_earth->rotateAroundObject(_sun, 3e-2f, glm::vec3(0.f, 0.f, 1.f));
