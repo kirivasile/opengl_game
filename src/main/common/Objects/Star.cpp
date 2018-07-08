@@ -16,7 +16,10 @@ LightInfo Star::getLight() {
 }
 
 void Star::render(const CameraInfo& camera, const GLuint& sampler) {
+	_time += _dt;
+
 	_shader->use();
+	_shader->setFloatUniform("time", _time);
 	_shader->setMat4Uniform("viewMatrix", camera.viewMatrix);
 	_shader->setMat4Uniform("projectionMatrix", camera.projMatrix);
 	_shader->setMat4Uniform("modelMatrix", _mesh->modelMatrix());

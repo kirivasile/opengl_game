@@ -20,6 +20,9 @@ public:
 	LightInfo getLight();
 protected:
 	LightInfo _light;
+
+	float _time = 0.f;
+	float _dt = 0.002f;
 };
 
 typedef std::shared_ptr<Star> StarPtr;

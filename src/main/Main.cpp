@@ -3,6 +3,7 @@
 #include "Objects\Planet.h"
 #include "Objects\SkyBox.h"
 #include "Objects\ScreenQuad.hpp"
+#include "Objects\Billboard.h"
 #include "ShineRenderer.h"
 
 class TestApplication : public Application {
@@ -24,6 +25,9 @@ public:
 		sunLight.diffuse = glm::vec3(0.9f, 0.9f, 0.9f);
 		sunLight.specular = glm::vec3(0.2f, 0.2f, 0.2f);
 		_sun = std::make_shared<Star>(1.f, sunPosition, "sun.jpg", sunLight);
+
+		// Star corona
+		_corona = std::make_shared<Billboard>(sunPosition, 4.0f);
 
 		// Init earth
 		glm::vec3 earthPosition = glm::vec3(5.0f, -5.0f, 0.f);
@@ -50,29 +54,25 @@ public:
 		glSamplerParameteri(_skyBoxSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glSamplerParameteri(_skyBoxSampler, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-		_sceneObjects = { _earth, _sun, _skyBox};
-		_samplers = { _sampler, _sampler, _skyBoxSampler };
+		_sceneObjects = { _earth, _sun, _skyBox, _corona};
+		_samplers = { _sampler, _sampler, _skyBoxSampler, _sampler};
 	}
 
 	void draw() override {
 		Application::draw();
 
 		// Rotate objects
-
-
 		int width, height;
 		glfwGetFramebufferSize(_window, &width, &height);
 		glViewport(0, 0, width, height);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		//_shineRenderer->render(_sceneObjects, _samplers, _camera);
-
 		for (unsigned int i = 0; i < _sceneObjects.size(); ++i) {
 			_sceneObjects[i]->render(_camera, _samplers[i]);
 		}
 
-		_earth->rotate(5e-4f, glm::vec3(0.f, 0.f, 1.f));
-		_sun->rotate(1e-4f, glm::vec3(0.f, 0.f, 1.f));
+		//_earth->rotate(5e-4f, glm::vec3(0.f, 0.f, 1.f));
+		//_sun->rotate(1e-4f, glm::vec3(0.f, 0.f, 1.f));
 		//_earth->rotateAroundObject(_sun, 3e-2f, glm::vec3(0.f, 0.f, 1.f));
 	}
 
@@ -90,6 +90,7 @@ public:
 
 protected:
 	StarPtr _sun;
+	BillboardPtr _corona;
 	PlanetPtr _earth;
 	SkyBoxPtr _skyBox;
 
