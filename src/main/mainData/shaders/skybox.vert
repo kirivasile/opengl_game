@@ -1,14 +1,14 @@
 #version 330
 
-uniform vec3 cameraPos; //положение виртуальной камеры в мировой системе координат
-uniform mat4 viewMatrix; //из мировой в систему координат камеры
-uniform mat4 projectionMatrix; //из системы координат камеры в усеченные координаты
+uniform vec3 cameraPos;
+uniform mat4 viewMatrix;
+uniform mat4 projectionMatrix;
 
-uniform mat3 textureMatrix; //матрица для превращения координат из локальной системы кординат в текстурные координаты
+uniform mat3 textureMatrix;
 
-layout(location = 0) in vec3 vertexPosition; //координаты вершины в локальной системе координат
+layout(location = 0) in vec3 vertexPosition;
 
-out vec3 texCoord; //текстурные координаты
+out vec3 texCoord;
 
 void main()
 {
