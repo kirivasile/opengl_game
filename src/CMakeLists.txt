@@ -9,8 +9,6 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 include(MacroUtils)
 
-# set(SELECTED_STUDENT CACHE STRING "The only student to build")
-
 FIND_DEPENDENCIES()
 
 if(UNIX)

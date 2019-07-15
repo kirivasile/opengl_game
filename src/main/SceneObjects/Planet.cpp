@@ -1,22 +1,33 @@
 #pragma once
 #include "Planet.h"
 
-Planet::Planet(float radius, const glm::vec3& position, const std::string& texture, MaterialInfo material, StarPtr star) : 
+Planet::Planet(
+	float radius, 
+	const glm::vec3& position, 
+	const std::string& texture, 
+	MaterialInfo material, 
+	StarPtr star,
+	float rotationSpeed,
+	const GLuint& sampler
+) : 
 	_material{ material },
 	_star{ star }
 {
 	_mesh = makeSphere(radius);
 	_mesh->setModelMatrix(glm::translate(glm::mat4(1.0f), position));
-	_position = position;
 	_texture = loadTexture(texture);
 	_shader = std::make_shared<ShaderProgram>("planet.vert", "planet.frag");
+
+	_position = position;
+	_rotationSpeed = rotationSpeed;
+	_sampler = sampler;
 }
 
 MaterialInfo Planet::getMaterial() {
 	return _material;
 }
 
-void Planet::render(const CameraInfo& camera, const GLuint& sampler) {
+void Planet::render(const CameraInfo& camera) {
 	_shader->use();
 	_shader->setMat4Uniform("viewMatrix", camera.viewMatrix);
 	_shader->setMat4Uniform("projectionMatrix", camera.projMatrix);
@@ -35,7 +46,7 @@ void Planet::render(const CameraInfo& camera, const GLuint& sampler) {
 	_shader->setVec3Uniform("material.Ks", _material.specular);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindSampler(0, sampler);
+	glBindSampler(0, _sampler);
 	_texture->bind();
 	_shader->setIntUniform("planetTex", 0);
 
@@ -45,13 +56,6 @@ void Planet::render(const CameraInfo& camera, const GLuint& sampler) {
 	glUseProgram(0);
 }
 
-void Planet::rotate(float degrees, glm::vec3 direction) {
-	_mesh->setModelMatrix(glm::rotate(_mesh->modelMatrix(), degrees, direction));
-}
-
-void Planet::rotateAroundObject(SceneObjectPtr object, float degrees, glm::vec3 direction) {
-	glm::vec3 thisToObject = object->getPosition() - this->getPosition();
-	glm::vec3 newThisToObject = glm::rotate(thisToObject, degrees, direction);
-	glm::vec3 diff = thisToObject - newThisToObject;
-	_mesh->setModelMatrix(glm::translate(_mesh->modelMatrix(), diff));
+void Planet::rotate() {
+	_mesh->setModelMatrix(glm::rotate(_mesh->modelMatrix(), _rotationSpeed, _rotationDirection));
 }

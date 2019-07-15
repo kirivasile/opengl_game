@@ -1,12 +1,13 @@
 #include "SkyBox.h"
 
-SkyBox::SkyBox(const float& size, const std::string& texture) {
+SkyBox::SkyBox(const float& size, const std::string& texture, const GLuint& sampler) {
 	_mesh = makeCube(10.f);
 	_texture = loadCubeTexture(texture);
 	_shader = std::make_shared<ShaderProgram>("skybox.vert", "skybox.frag");
+	_sampler = sampler;
 }
 
-void SkyBox::render(const CameraInfo& camera, const GLuint& sampler) {
+void SkyBox::render(const CameraInfo& camera) {
 	_shader->use();
 	// Get the position of the virtual camera in the world coordinate system from the view matrix
 	glm::vec3 cameraPos = glm::vec3(glm::inverse(camera.viewMatrix)[3]);
@@ -20,7 +21,7 @@ void SkyBox::render(const CameraInfo& camera, const GLuint& sampler) {
 	_shader->setMat3Uniform("textureMatrix", textureMatrix);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindSampler(0, sampler);
+	glBindSampler(0, _sampler);
 	_texture->bind();
 	_shader->setIntUniform("skyBoxTex", 0);
 
@@ -34,5 +35,3 @@ void SkyBox::render(const CameraInfo& camera, const GLuint& sampler) {
 	glBindSampler(0, 0);
 	glUseProgram(0);
 }
-
-void SkyBox::rotate(float degrees, glm::vec3 direction) {}

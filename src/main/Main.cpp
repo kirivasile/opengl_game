@@ -1,21 +1,22 @@
-#include "Application.hpp"
-#include "Objects\Star.h"
-#include "Objects\Planet.h"
-#include "Objects\SkyBox.h"
-#include "Objects\ScreenQuad.hpp"
-#include "Objects\Billboard.h"
-#include "ShineRenderer.h"
+#include "OpenGL\Application.hpp"
+#include "OpenGL\ScreenQuad.hpp"
+#include "SceneObjects\Star.h"
+#include "SceneObjects\Planet.h"
+#include "SceneObjects\SkyBox.h"
+#include "SceneObjects\Billboard.h"
 
-class TestApplication : public Application {
+class Game : public Application {
 public:
 	void makeScene() override {
 
 		Application::makeScene();
 
+		initSamplers();
+
 		int width, height;
 		glfwGetFramebufferSize(_window, &width, &height);
-		_shineRenderer = std::make_shared<ShineRenderer>(width, height);
 
+		// Init camera controller
 		_cameraMover = std::make_shared<FreeCameraMover>();
 		
 		// Init sun
@@ -24,10 +25,20 @@ public:
 		sunLight.ambient = glm::vec3(0.1f, 0.1f, 0.1f);
 		sunLight.diffuse = glm::vec3(0.9f, 0.9f, 0.9f);
 		sunLight.specular = glm::vec3(0.2f, 0.2f, 0.2f);
-		_sun = std::make_shared<Star>(1.f, sunPosition, "sun.jpg", sunLight);
 
-		// Star corona
-		_corona = std::make_shared<Billboard>(sunPosition, 4.0f);
+		float sunRadius = 1.f;
+		float sunRotateSpeed = 5e-4f;
+		_sun = std::make_shared<Star>(
+			sunRadius, 
+			sunPosition, 
+			"sun.jpg", 
+			sunLight, 
+			sunRotateSpeed,
+			_sampler
+		);
+
+		// Sun corona
+		_corona = std::make_shared<Billboard>(sunPosition, 4.0f, _sampler);
 
 		// Init earth
 		glm::vec3 earthPosition = glm::vec3(5.0f, -5.0f, 0.f);
@@ -35,11 +46,27 @@ public:
 		earthMaterial.ambient = glm::vec3(1.f, 1.f, 1.f);
 		earthMaterial.diffuse = glm::vec3(1.f, 1.f, 1.f);
 		earthMaterial.specular = glm::vec3(1.f, 1.f, 1.f);
-		_earth = std::make_shared<Planet>(0.4f, earthPosition, "earth.jpg", earthMaterial, _sun);
+
+		float earthRadius = 0.4f;
+		float earthRotationSpeed = 1e-4f;
+		_earth = std::make_shared<Planet>(
+			earthRadius, 
+			earthPosition, 
+			"earth.jpg", 
+			earthMaterial, 
+			_sun,
+			earthRotationSpeed,
+			_sampler
+		);
 
 		// Init skybox
-		_skyBox = std::make_shared<SkyBox>(10.f, "skybox");
+		_skyBox = std::make_shared<SkyBox>(10.f, "skybox", _skyBoxSampler);
 
+		_renderableObjects = { _earth, _sun, _skyBox, _corona };
+		_rotatableObjects = { _earth, _sun };
+	}
+
+	void initSamplers() {
 		// Initialize samplers for keeping the parameters of the reading from textures
 		glGenSamplers(1, &_sampler);
 		glSamplerParameteri(_sampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -53,38 +80,28 @@ public:
 		glSamplerParameteri(_skyBoxSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glSamplerParameteri(_skyBoxSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glSamplerParameteri(_skyBoxSampler, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-		_sceneObjects = { _earth, _sun, _skyBox, _corona};
-		_samplers = { _sampler, _sampler, _skyBoxSampler, _sampler};
 	}
 
 	void draw() override {
+		/*
+		Method will be called every frame
+		*/
+
 		Application::draw();
 
-		// Rotate objects
 		int width, height;
 		glfwGetFramebufferSize(_window, &width, &height);
 		glViewport(0, 0, width, height);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		for (unsigned int i = 0; i < _sceneObjects.size(); ++i) {
-			_sceneObjects[i]->render(_camera, _samplers[i]);
+		// Rendering all objects
+		for (auto &obj : _renderableObjects) {
+			obj->render(_camera);
 		}
 
-		//_earth->rotate(5e-4f, glm::vec3(0.f, 0.f, 1.f));
-		//_sun->rotate(1e-4f, glm::vec3(0.f, 0.f, 1.f));
-		//_earth->rotateAroundObject(_sun, 3e-2f, glm::vec3(0.f, 0.f, 1.f));
-	}
-
-	void update() override {
-		Application::update();
-		// If the size of the windows is changed, resize all buffers
-		int width, height;
-		glfwGetWindowSize(_window, &width, &height);
-		if (width != _oldWidth || height != _oldHeight) {
-			_shineRenderer->resize(width, height);
-			_oldWidth = width;
-			_oldHeight = height;
+		// Rotating all objects
+		for (auto &obj : _rotatableObjects) {
+			obj->rotate();
 		}
 	}
 
@@ -94,18 +111,14 @@ protected:
 	PlanetPtr _earth;
 	SkyBoxPtr _skyBox;
 
+	std::vector<IRotatablePtr> _rotatableObjects;
+	std::vector<IRenderablePtr> _renderableObjects;
+
 	GLuint _sampler, _skyBoxSampler;
-
-	ShineRendererPtr _shineRenderer;
-
-	std::vector<SceneObjectPtr> _sceneObjects;
-	std::vector<GLuint> _samplers;
-
-	int _oldWidth, _oldHeight;
 };
 
 int main() {
-	TestApplication app;
+	Game app;
 	app.start();
 	
 	return 0;

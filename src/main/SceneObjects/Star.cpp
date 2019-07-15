@@ -1,7 +1,14 @@
 #pragma once
 #include "Star.h"
 
-Star::Star(float radius, const glm::vec3& position, const std::string& texture, LightInfo light) : 
+Star::Star(
+	float radius, 
+	const glm::vec3& position, 
+	const std::string& texture, 
+	LightInfo light, 
+	float rotationSpeed,
+	const GLuint& sampler
+) : 
 	_light{ light }
 {
 	_mesh = makeSphere(radius);
@@ -9,13 +16,15 @@ Star::Star(float radius, const glm::vec3& position, const std::string& texture, 
 	_position = position;
 	_texture = loadTexture(texture);
 	_shader = std::make_shared<ShaderProgram>("star.vert", "star.frag");
+	_rotationSpeed = rotationSpeed;
+	_sampler = sampler;
 }
 
 LightInfo Star::getLight() {
 	return _light;
 }
 
-void Star::render(const CameraInfo& camera, const GLuint& sampler) {
+void Star::render(const CameraInfo& camera) {
 	_time += _dt;
 
 	_shader->use();
@@ -25,7 +34,7 @@ void Star::render(const CameraInfo& camera, const GLuint& sampler) {
 	_shader->setMat4Uniform("modelMatrix", _mesh->modelMatrix());
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindSampler(0, sampler);
+	glBindSampler(0, _sampler);
 	_texture->bind();
 	_shader->setIntUniform("starTex", 0);
 
@@ -35,6 +44,6 @@ void Star::render(const CameraInfo& camera, const GLuint& sampler) {
 	glUseProgram(0);
 }
 
-void Star::rotate(float degrees, glm::vec3 direction) {
-	_mesh->setModelMatrix(glm::rotate(_mesh->modelMatrix(), degrees, direction));
+void Star::rotate() {
+	_mesh->setModelMatrix(glm::rotate(_mesh->modelMatrix(), _rotationSpeed, _rotationDirection));
 }

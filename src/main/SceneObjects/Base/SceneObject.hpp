@@ -1,8 +1,10 @@
 #pragma once
-#include "Mesh.hpp"
-#include "ShaderProgram.hpp"
-#include "Texture.hpp"
-#include "Camera.hpp"
+#include "..\OpenGL\Mesh.hpp"
+#include "..\OpenGL\ShaderProgram.hpp"
+#include "..\OpenGL\Texture.hpp"
+#include "..\OpenGL\Camera.hpp"
+#include "Base\IRotatable.hpp"
+#include "Base\IRenderable.hpp"
 #include <glm/glm.hpp>
 
 class SceneObject {
@@ -22,10 +24,6 @@ public:
 	glm::vec3 getPosition() const {
 		return _position;
 	}
-
-	virtual void render(const CameraInfo& camera, const GLuint& sampler) = 0;
-
-	virtual void rotate(float degrees, glm::vec3 direction) = 0;
 protected:
 	glm::vec3 _position{ glm::vec3(0.f, 0.f, 0.f) };
 	MeshPtr _mesh;
